@@ -1,0 +1,17 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+		97C146E61CF9000F007C117D = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.pb-project;
+			name = Pods.xcodeproj;
+			path = Pods/Pods.xcodeproj;
+			sourceTree = "<group>";
+		};
+	};
+	rootObject = 97C146E31CF9000F007C117D;
+}
