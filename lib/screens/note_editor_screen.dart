@@ -175,7 +175,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
             // Content
             TextField(
               controller: _contentController,
-              style: GoogleFonts.poppins(fontSize: 16, color: Colors.black75, height: 1.6),
+              style: GoogleFonts.poppins(fontSize: 16, color: Colors.black54, height: 1.6),
               decoration: InputDecoration(
                 hintText: 'Start writing your note...',
                 hintStyle: GoogleFonts.poppins(fontSize: 16, color: Colors.black26),
