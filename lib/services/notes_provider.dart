@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/note.dart';
-import 'database_service.dart';
 
 class NotesProvider extends ChangeNotifier {
   List<Note> _notes = [];
@@ -10,7 +9,7 @@ class NotesProvider extends ChangeNotifier {
   String _selectedCategory = 'All';
   bool _isLoading = false;
   bool _showFavorites = false;
-  String _viewMode = 'grid'; // 'grid' or 'list'
+  String _viewMode = 'grid';
 
   List<Note> get notes => _filteredNotes;
   List<Note> get allNotes => _notes;
@@ -21,13 +20,17 @@ class NotesProvider extends ChangeNotifier {
   String get viewMode => _viewMode;
 
   final _uuid = const Uuid();
-  final _db = DatabaseService.instance;
 
   Future<void> loadNotes() async {
     _isLoading = true;
     notifyListeners();
-    _notes = await _db.getAllNotes();
+
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    _notes = [];
+
     _applyFilters();
+
     _isLoading = false;
     notifyListeners();
   }
@@ -49,7 +52,6 @@ class NotesProvider extends ChangeNotifier {
           n.content.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
     }
 
-    // Pinned notes first
     filtered.sort((a, b) {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
@@ -67,6 +69,7 @@ class NotesProvider extends ChangeNotifier {
     List<String> tags = const [],
   }) async {
     final now = DateTime.now();
+
     final note = Note(
       id: _uuid.v4(),
       title: title,
@@ -77,59 +80,91 @@ class NotesProvider extends ChangeNotifier {
       updatedAt: now,
       tags: tags,
     );
-    await _db.createNote(note);
-    await loadNotes();
+
+    _notes.add(note);
+
+    _applyFilters();
+    notifyListeners();
   }
 
   Future<void> updateNote(Note note) async {
-    final updated = note.copyWith(updatedAt: DateTime.now());
-    await _db.updateNote(updated);
-    await loadNotes();
+    final index = _notes.indexWhere((n) => n.id == note.id);
+
+    if (index != -1) {
+      _notes[index] = note.copyWith(updatedAt: DateTime.now());
+    }
+
+    _applyFilters();
+    notifyListeners();
   }
 
   Future<void> deleteNote(String id) async {
-    await _db.deleteNote(id);
     _notes.removeWhere((n) => n.id == id);
+
     _applyFilters();
     notifyListeners();
   }
 
   Future<void> togglePin(Note note) async {
-    final updated = note.copyWith(isPinned: !note.isPinned, updatedAt: DateTime.now());
-    await _db.updateNote(updated);
-    await loadNotes();
+    final index = _notes.indexWhere((n) => n.id == note.id);
+
+    if (index != -1) {
+      _notes[index] = note.copyWith(
+        isPinned: !note.isPinned,
+        updatedAt: DateTime.now(),
+      );
+    }
+
+    _applyFilters();
+    notifyListeners();
   }
 
   Future<void> toggleFavorite(Note note) async {
-    final updated = note.copyWith(isFavorite: !note.isFavorite, updatedAt: DateTime.now());
-    await _db.updateNote(updated);
-    await loadNotes();
+    final index = _notes.indexWhere((n) => n.id == note.id);
+
+    if (index != -1) {
+      _notes[index] = note.copyWith(
+        isFavorite: !note.isFavorite,
+        updatedAt: DateTime.now(),
+      );
+    }
+
+    _applyFilters();
+    notifyListeners();
   }
 
   void setSearch(String query) {
     _searchQuery = query;
+
     _applyFilters();
     notifyListeners();
   }
 
   void setCategory(String category) {
     _selectedCategory = category;
+
     _applyFilters();
     notifyListeners();
   }
 
   void toggleFavoritesFilter() {
     _showFavorites = !_showFavorites;
+
     _applyFilters();
     notifyListeners();
   }
 
   void toggleViewMode() {
     _viewMode = _viewMode == 'grid' ? 'list' : 'grid';
+
     notifyListeners();
   }
 
   int get totalNotes => _notes.length;
-  int get pinnedCount => _notes.where((n) => n.isPinned).length;
-  int get favoritesCount => _notes.where((n) => n.isFavorite).length;
+
+  int get pinnedCount =>
+      _notes.where((n) => n.isPinned).length;
+
+  int get favoritesCount =>
+      _notes.where((n) => n.isFavorite).length;
 }
