@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+
 import 'services/notes_provider.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+
   runApp(
     ChangeNotifierProvider(
-      create: (_) => NotesProvider(),
+      create: (_) => NotesProvider()..loadNotes(),
       child: const NoteFlowApp(),
     ),
   );
@@ -19,15 +24,9 @@ class NoteFlowApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'NoteFlow',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF7C4DFF),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      title: 'NoteFlow',
+      theme: ThemeData.dark(),
       home: const HomeScreen(),
     );
   }

@@ -1,108 +1,45 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/note.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
-  static Database? _database;
 
   DatabaseService._init();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDB('notes.db');
-    return _database!;
-  }
-
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
-  }
-
-  Future _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE notes (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        content TEXT NOT NULL,
-        category TEXT NOT NULL,
-        color INTEGER NOT NULL,
-        isPinned INTEGER NOT NULL,
-        isFavorite INTEGER NOT NULL,
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        tags TEXT
-      )
-    ''');
-  }
+  final Box _box = Hive.box('notesBox');
 
   Future<Note> createNote(Note note) async {
-    final db = await instance.database;
-    await db.insert('notes', note.toMap());
+    await _box.put(note.id, note.toMap());
     return note;
   }
 
   Future<List<Note>> getAllNotes() async {
-    final db = await instance.database;
-    final result = await db.query('notes', orderBy: 'isPinned DESC, updatedAt DESC');
-    return result.map((map) => Note.fromMap(map)).toList();
-  }
+    final notes = _box.values
+        .map((e) => Note.fromMap(Map<String, dynamic>.from(e)))
+        .toList();
 
-  Future<List<Note>> getNotesByCategory(String category) async {
-    final db = await instance.database;
-    final result = await db.query(
-      'notes',
-      where: 'category = ?',
-      whereArgs: [category],
-      orderBy: 'isPinned DESC, updatedAt DESC',
-    );
-    return result.map((map) => Note.fromMap(map)).toList();
-  }
+    notes.sort((a, b) {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.updatedAt.compareTo(a.updatedAt);
+    });
 
-  Future<List<Note>> searchNotes(String query) async {
-    final db = await instance.database;
-    final result = await db.query(
-      'notes',
-      where: 'title LIKE ? OR content LIKE ?',
-      whereArgs: ['%$query%', '%$query%'],
-      orderBy: 'updatedAt DESC',
-    );
-    return result.map((map) => Note.fromMap(map)).toList();
-  }
-
-  Future<List<Note>> getFavoriteNotes() async {
-    final db = await instance.database;
-    final result = await db.query(
-      'notes',
-      where: 'isFavorite = 1',
-      orderBy: 'updatedAt DESC',
-    );
-    return result.map((map) => Note.fromMap(map)).toList();
+    return notes;
   }
 
   Future<int> updateNote(Note note) async {
-    final db = await instance.database;
-    return await db.update(
-      'notes',
-      note.toMap(),
-      where: 'id = ?',
-      whereArgs: [note.id],
-    );
+    await _box.put(note.id, note.toMap());
+    return 1;
   }
 
   Future<int> deleteNote(String id) async {
-    final db = await instance.database;
-    return await db.delete('notes', where: 'id = ?', whereArgs: [id]);
+    await _box.delete(id);
+    return 1;
   }
 
   Future<void> deleteAllNotes() async {
-    final db = await instance.database;
-    await db.delete('notes');
+    await _box.clear();
   }
 
-  Future close() async {
-    final db = await instance.database;
-    db.close();
-  }
+  Future close() async {}
 }
