@@ -67,6 +67,7 @@ class NotesProvider extends ChangeNotifier {
     String category = 'General',
     Color color = const Color(0xFFFFF9C4),
     List<String> tags = const [],
+    String? fileName,
   }) async {
     final now = DateTime.now();
 
@@ -79,6 +80,7 @@ class NotesProvider extends ChangeNotifier {
       createdAt: now,
       updatedAt: now,
       tags: tags,
+      fileName: fileName,
     );
 
     _notes.add(note);

@@ -12,6 +12,9 @@ class Note {
   DateTime updatedAt;
   List<String> tags;
 
+  // NEW
+  String? fileName;
+
   Note({
     required this.id,
     required this.title,
@@ -23,6 +26,9 @@ class Note {
     required this.createdAt,
     required this.updatedAt,
     this.tags = const [],
+
+    // NEW
+    this.fileName,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +43,9 @@ class Note {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'tags': tags.join(','),
+
+      // NEW
+      'fileName': fileName,
     };
   }
 
@@ -54,6 +63,9 @@ class Note {
       tags: map['tags'] != null && map['tags'].toString().isNotEmpty
           ? map['tags'].toString().split(',')
           : [],
+
+      // NEW
+      fileName: map['fileName'],
     );
   }
 
@@ -68,6 +80,9 @@ class Note {
     DateTime? createdAt,
     DateTime? updatedAt,
     List<String>? tags,
+
+    // NEW
+    String? fileName,
   }) {
     return Note(
       id: id ?? this.id,
@@ -80,6 +95,9 @@ class Note {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       tags: tags ?? this.tags,
+
+      // NEW
+      fileName: fileName ?? this.fileName,
     );
   }
 }

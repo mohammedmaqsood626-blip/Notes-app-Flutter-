@@ -48,6 +48,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     _isPinned = n?.isPinned ?? false;
     _isFavorite = n?.isFavorite ?? false;
 
+    // NEW
+    selectedFileName = n?.fileName;
+
     _titleController.addListener(() {
       setState(() => _hasChanges = true);
     });
@@ -95,6 +98,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         category: _selectedCategory,
         color: _selectedColor,
         tags: _tags,
+
+        // NEW
+        fileName: selectedFileName,
       );
     } else {
       final updated = widget.note!.copyWith(
@@ -105,6 +111,9 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         tags: _tags,
         isPinned: _isPinned,
         isFavorite: _isFavorite,
+
+        // NEW
+        fileName: selectedFileName,
       );
 
       await provider.updateNote(updated);
@@ -299,12 +308,24 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
             if (selectedFileName != null)
               Padding(
                 padding: const EdgeInsets.only(top: 10),
-                child: Text(
-                  "Selected: $selectedFileName",
-                  style: GoogleFonts.poppins(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.attach_file,
+                      color: Colors.black54,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        selectedFileName!,
+                        style: GoogleFonts.poppins(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
